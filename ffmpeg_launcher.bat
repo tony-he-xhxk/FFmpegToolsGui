@@ -64,12 +64,13 @@ echo.
 echo   [1] 视频大小裁剪（裁剪画面区域 / 黑边）
 echo   [2] 调整分辨率  （缩放 / 改变宽高）
 echo   [3] 时间裁剪    （截取片段 / 起止时间）
+echo   [4] 图片分辨率  （调宽 / 调高 / 自定义）
 echo   [0] 退出
 echo.
 echo   Python: %PYTHON%
 echo.
 set "choice="
-set /p "choice=  请选择操作 [0-3]: "
+set /p "choice=  请选择操作 [0-4]: "
 echo.
 
 if "%choice%"=="1" (
@@ -87,13 +88,18 @@ if "%choice%"=="3" (
     set "RUN_NAME=时间裁剪"
     goto :run
 )
+if "%choice%"=="4" (
+    set "RUN_SCRIPT=ffmpeg_image_resize_gui.py"
+    set "RUN_NAME=图片分辨率调整"
+    goto :run
+)
 if "%choice%"=="0" (
     echo   再见！
     echo.
     exit /b 0
 )
 
-echo   [警告] 无效选择，请输入 0-3。
+echo   [警告] 无效选择，请输入 0-4。
 timeout /t 1 >nul 2>&1
 goto :menu
 

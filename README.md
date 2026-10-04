@@ -1,6 +1,6 @@
 # 🎬 FFmpegToolsGui（FFmpeg 视频工具箱）
 
-> 一套基于 Python + Tkinter 的本地视频处理桌面工具集，封装 FFmpeg 三类常用操作，附带统一启动器。
+> 一套基于 Python + Tkinter 的本地视频 / 图片处理桌面工具集，封装 FFmpeg 四类常用操作，附带统一启动器。
 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)](https://www.python.org/)
 [![FFmpeg](https://img.shields.io/badge/FFmpeg-required-green?logo=ffmpeg)](https://ffmpeg.org/)
@@ -12,10 +12,11 @@
 ## 📦 项目文件
 
 ```
-ffmpeggui/
+FFmpegToolsGui/
 ├── ffmpeg_crop_gui.py         # 工具①：视频画面裁剪（可视化拖拽 / 裁黑边）
 ├── ffmpeg_resize_gui.py       # 工具②：分辨率调整（缩放 / 改变宽高）
 ├── ffmpeg_clip_gui.py         # 工具③：时间裁剪（截取视频片段）
+├── ffmpeg_image_resize_gui.py # 工具④：图片分辨率调整（调宽 / 调高 / 自定义）
 ├── ffmpeg_launcher.bat        # 🚀 统一启动器（双击运行，交互菜单）
 ```
 
@@ -24,6 +25,7 @@ ffmpeggui/
 | ①   | `ffmpeg_crop_gui.py`   | 可视拖拽裁剪画面区域    | `原文件名_cropped.扩展名`      |
 | ②   | `ffmpeg_resize_gui.py` | 等比例 / 强制缩放分辨率 | `原文件名_resized_{参数}.扩展名` |
 | ③   | `ffmpeg_clip_gui.py`   | 按起止时间截取片段     | `原文件名_trimmed.扩展名`      |
+| ④   | `ffmpeg_image_resize_gui.py` | 图片分辨率调整（调宽 / 调高 / 自定义） | `原文件名_resized_{参数}.扩展名` |
 
 ---
 
@@ -56,6 +58,7 @@ ffmpeggui/
 | ① 视频画面裁剪 | **Pillow** | `pip install Pillow` |
 | ② 分辨率调整 | *无（纯标准库）* | — |
 | ③ 时间裁剪 | *无（纯标准库）* | — |
+| ④ 图片分辨率调整 | *无（纯标准库）* | — |
 
 ### 一键安装
 
@@ -80,7 +83,7 @@ python -c "import tkinter; from PIL import Image; print('OK')"
 1. 双击 `ffmpeg_launcher.bat`
 2. 在交互菜单中选择操作：
    ```
-   [1] 视频画面裁剪       [2] 调整分辨率       [3] 时间裁剪       [0] 退出
+   [1] 视频画面裁剪   [2] 调整分辨率   [3] 时间裁剪   [4] 图片分辨率   [0] 退出
    ```
 3. 工具执行完毕后按回车返回菜单，可继续选择其他操作
 
@@ -95,6 +98,9 @@ python ffmpeg_resize_gui.py
 
 # 时间裁剪（按起止时间截取片段）
 python ffmpeg_clip_gui.py
+
+# 图片分辨率调整（调宽 / 调高 / 自定义宽高，输出格式与输入一致）
+python ffmpeg_image_resize_gui.py
 ```
 
 ### 通用操作流程
@@ -104,9 +110,9 @@ python ffmpeg_clip_gui.py
 ```
 ① 自动检测 FFmpeg（或手动浏览 ffmpeg.exe）
        ↓
-② 点击「浏览…」选择输入视频文件
+② 点击「浏览…」选择输入视频（或图片）文件
        ↓
-③ 根据工具类型设置参数（拖拽裁剪框 / 输入分辨率 / 填写起止时间）
+③ 根据工具类型设置参数（拖拽裁剪框 / 输入分辨率 / 填写起止时间 / 填写图片尺寸）
        ↓
 ④ （可选）点击「检测完整性」验证视频文件
        ↓
@@ -121,7 +127,7 @@ python ffmpeg_clip_gui.py
 
 ## 🎨 界面预览
 
-三个工具共享统一的界面风格：
+四个工具共享统一的界面风格：
 
 - **顶部**：FFmpeg 路径显示（自动检测/手动选择）
 - **中部**：工具专属参数区 + 操作按钮（检测完整/执行/停止/清空终端）
@@ -163,6 +169,12 @@ python ffmpeg_clip_gui.py
 </details>
 
 <details>
+<summary><b>Q: 图片分辨率调整支持哪些格式？</b></summary>
+<br>
+支持 PNG / JPG / JPEG / BMP / WebP / TIFF / TGA / GIF / ICO / PPM 等常见格式，<b>输出格式与输入保持一致</b>（沿用原扩展名，如 <code>photo.png → photo_resized_w800.png</code>）。等比例模式只填一边：调宽只填宽度、调高只填高度，另一边由 FFmpeg 按原比例自动计算；自定义模式填宽、高两个值，不保持原比例。
+</details>
+
+<details>
 <summary><b>Q: 控制台中文乱码？</b></summary>
 <br>
 启动器 <code>.bat</code> 已用 GBK 编码保存，正常情况下不会乱码。如果仍有问题，请确认系统区域设置为"中国"（设置 → 时间和语言 → 语言和区域 → 管理语言设置 → 更改系统区域设置）。
@@ -171,7 +183,7 @@ python ffmpeg_clip_gui.py
 <details>
 <summary><b>Q: 输出文件在哪里？</b></summary>
 <br>
-在输入视频的**同一目录下**，文件名自动追加后缀（如 <code>_cropped.mp4</code>、<code>_trimmed.mp4</code>），已存在则自动加序号避免覆盖。
+在输入文件的**同一目录下**，文件名自动追加后缀（如 <code>_cropped.mp4</code>、<code>_trimmed.mp4</code>、<code>_resized_1920x1080.png</code>），已存在则自动加序号避免覆盖。
 </details>
 
 ---
