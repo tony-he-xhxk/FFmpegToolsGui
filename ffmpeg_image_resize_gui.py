@@ -408,65 +408,6 @@ def choice_code(choices: list, display_text: str) -> str:
     return choices[0][1]
 
 
-def list_available_encoders(ffmpeg_path: str) -> set:
-    """问一次 ffmpeg 支持哪些编码器，用于自动隐藏不可用的选项。"""
-    if not ffmpeg_path:
-        return set()
-    try:
-        result = subprocess.run(
-            f'"{ffmpeg_path}" -hide_banner -encoders',
-            shell=True, capture_output=True, text=True,
-            encoding='utf-8', errors='replace', timeout=15)
-        names = set()
-        for line in (result.stdout or '').splitlines():
-            m = re.match(r'^\s*[VASD][\w.]*\s+(\S+)', line)
-            if m:
-                names.add(m.group(1))
-        return names
-    except Exception:
-        return set()
-
-
-def resolve_video_encoder(encoder: str, out_ext: str) -> tuple:
-    """确定真正使用的编码器，并处理与输出容器不兼容时的兜底。
-    返回 (编码器名, 提示文字或 None)。"""
-    note = None
-    compat = CONTAINER_VIDEO_COMPAT.get(out_ext)
-    if compat is not None and encoder not in compat:
-        fallback = CONTAINER_VIDEO_FALLBACK.get(out_ext, 'libx264')
-        note = f"编码器 {encoder} 与 {out_ext} 容器不兼容，自动改用 {fallback}"
-        encoder = fallback
-    return encoder, note
-
-
-def build_video_args(encoder: str, preset: str) -> list:
-    """生成视频编码参数（画质值内部固定：x264=CRF23 / x265=CRF28 / N卡=-cq）。"""
-    args = ['-c:v', encoder]
-    if encoder in CRF_BY_ENCODER:
-        args += ['-crf', CRF_BY_ENCODER[encoder], '-preset', preset]
-    elif encoder in CQ_BY_ENCODER:
-        args += ['-cq', CQ_BY_ENCODER[encoder]]      # N 卡用固定档位（默认 p4），不开放给用户
-    return args
-
-
-def build_audio_args(mode: str, out_ext: str, source_audio_codec: Optional[str]) -> tuple:
-    """生成音频参数，返回 (参数列表, 提示文字或 None)。"""
-    if mode == 'none':
-        return ['-an'], "音频：静音（不要声音）"
-    if mode == 'aac':
-        return (['-c:a', 'aac', '-b:a', AUDIO_AAC_BITRATE],
-                f"音频：重编码为 AAC {AUDIO_AAC_BITRATE}")
-    # 复制（默认）
-    if not source_audio_codec:
-        return ['-an'], "音频：原视频没有音轨，已跳过"
-    compat = CONTAINER_AUDIO_COMPAT.get(out_ext, set())
-    if source_audio_codec in compat:
-        return ['-c:a', 'copy'], f"音频：复制 {source_audio_codec}（无损）"
-    fb_encoder, fb_bitrate = CONTAINER_AUDIO_FALLBACK.get(out_ext, ('aac', AUDIO_AAC_BITRATE))
-    return (['-c:a', fb_encoder, '-b:a', fb_bitrate],
-            f"音频：{source_audio_codec} 与 {out_ext} 不兼容，自动转为 {fb_encoder} {fb_bitrate}")
-
-
 # ──────────────────────────────────────────────
 #  主 GUI 类
 # ──────────────────────────────────────────────
@@ -559,7 +500,7 @@ class FFmpegImageResizeGUI:
         # ----- Row 3: 原分辨率 / 批量状态 -----
         self.info_label = ui.Label(self.window, text="原分辨率:")
         self.info_label.grid(row=3, column=0, sticky="w", **pad)
-        self.resolution_var = tk.StringVar(value="（选择视频后自动获取）")
+        self.resolution_var = tk.StringVar(value="（选择图片后自动获取）")
         ui.Label(self.window, textvariable=self.resolution_var, foreground="#007acc")\
             .grid(row=3, column=1, columnspan=3, sticky="w", **pad)
 
@@ -638,7 +579,7 @@ class FFmpegImageResizeGUI:
 
         self.recursive_scan = tk.BooleanVar(value=False)
         self.chk_recursive = ui.Checkbutton(
-            batch_frame, text="包含子文件夹（把子目录里的视频也一起处理）",
+            batch_frame, text="包含子文件夹（把子目录里的图片也一起处理）",
             variable=self.recursive_scan, command=self._on_recursive_change)
         self.chk_recursive.pack(side="left", padx=(0, 20))
 
@@ -721,7 +662,7 @@ class FFmpegImageResizeGUI:
     def _on_input_mode_change(self):
         """切换「单个文件 / 批量处理」：只改文案与可编辑状态，不动已选的输入。"""
         batch = self.input_mode.get() == "batch"
-        self.input_label.configure(text="输入文件夹:" if batch else "输入视频:")
+        self.input_label.configure(text="输入文件夹:" if batch else "输入图片:")
         self.info_label.configure(text="批量状态:" if batch else "原分辨率:")
         self.btn_input_browse.configure(text="浏览文件夹…" if batch else "浏览…")
         self.chk_recursive.configure(state="normal" if batch else "disabled")
@@ -737,7 +678,7 @@ class FFmpegImageResizeGUI:
             if self.input_file and self.image_width:
                 self.resolution_var.set(f"{self.image_width} × {self.image_height}")
             else:
-                self.resolution_var.set("（选择视频后自动获取）")
+                self.resolution_var.set("（选择图片后自动获取）")
 
     def _on_recursive_change(self):
         """勾选/取消「包含子文件夹」时重新统计数量。"""
@@ -839,7 +780,7 @@ class FFmpegImageResizeGUI:
     # ── 文件夹选择与扫描（批量）────────────
 
     def _select_input_dir(self):
-        """选择批量处理的文件夹，并立刻统计里面有多少个视频。"""
+        """选择批量处理的文件夹，并立刻统计里面有多少张图片。"""
         folder = self._ask_dir(title="选择要批量处理的文件夹")
         self.window.after(80, self._restore_window_size)
         if not folder:
@@ -866,7 +807,7 @@ class FFmpegImageResizeGUI:
         self.output_var.set("")
 
     def _scan_input_dir(self) -> list:
-        """扫描输入文件夹，返回可处理的视频列表（自然排序，跳过本工具的输出文件）。"""
+        """扫描输入文件夹，返回可处理的图片列表（自然排序，跳过本工具的输出文件）。"""
         if not self.input_dir or not os.path.isdir(self.input_dir):
             return []
         found, skipped_own, skipped_other = list_media_files(
@@ -905,7 +846,7 @@ class FFmpegImageResizeGUI:
         """二次确认：必须手输 BATCH+文件数量（如 BATCH10）才会开始处理。"""
         code = f"{BATCH_CONFIRM_PREFIX}{count}"
         where = self.output_dir or "每个原文件所在的文件夹"
-        msg = (f"将要处理这个文件夹里的全部视频：\n{self.input_dir}\n\n"
+        msg = (f"将要处理这个文件夹里的全部图片：\n{self.input_dir}\n\n"
                f"共 {count} 个文件\n输出到：{where}\n\n"
                f"说明：\n"
                f"  · 每个文件都会先做完整性检测，损坏的会被跳过并记入报告\n"
@@ -1005,7 +946,7 @@ class FFmpegImageResizeGUI:
             f"[{self._ts()}] [{job['index']}/{len(self.batch_jobs)}] {os.path.basename(self.input_file)}")
         self._fetch_image_size()        # 顺便拿到分辨率 / 音频编码 / 时长
         if self.image_width is None:
-            self._fail_job("读不到视频信息（可能不是图片文件或文件已损坏）")
+            self._fail_job("读不到图片信息（可能不是图片文件或文件已损坏）")
             return
         self._refresh_progress()
         self._check_integrity(on_pass=self._do_resize, quiet=True)
@@ -1232,7 +1173,7 @@ class FFmpegImageResizeGUI:
             pass
 
     def _verify_output(self, path: str) -> tuple:
-        """检查输出文件是否有效：存在、非空、含视频流。返回 (是否有效, 失败原因)。"""
+        """检查输出文件是否有效：存在、非空、含图像数据。返回 (是否有效, 失败原因)。"""
         if not path or not os.path.isfile(path):
             return False, "没有生成输出文件"
         try:
@@ -1240,12 +1181,12 @@ class FFmpegImageResizeGUI:
                 return False, "输出文件是 0 字节（编码没有真正完成）"
         except OSError:
             return False, "读不到输出文件"
-        if not self._output_has_video(path):
-            return False, "输出文件里没有视频流（结果不完整）"
+        if not self._output_has_image(path):
+            return False, "输出文件里没有图像数据（结果不完整）"
         return True, ""
 
-    def _output_has_video(self, path: str) -> bool:
-        """用 ffprobe 检查文件里到底有没有视频流。"""
+    def _output_has_image(self, path: str) -> bool:
+        """用 ffprobe 检查文件里到底有没有图像数据。"""
         ffprobe_path = find_ffprobe(self.ffmpeg_path) if self.ffmpeg_path else None
         if not ffprobe_path:
             return True                      # 探测不可用时不删，避免误删
@@ -1259,7 +1200,7 @@ class FFmpegImageResizeGUI:
             return True
 
     def _remove_bad_output(self, path: str) -> bool:
-        """删除失败产生的废文件（0 字节 / 没有视频流）。返回是否删除了。"""
+        """删除失败产生的废文件（0 字节 / 没有图像数据）。返回是否删除了。"""
         if not path or not os.path.isfile(path):
             return False
         try:
@@ -1283,7 +1224,7 @@ class FFmpegImageResizeGUI:
             return False, 0, f"{name}至少是 2 像素，你填的是 {value}。"
         if value > 16384:
             return False, 0, f"{name}最多 16384 像素（再大基本不会被接受），你填的是 {value}。"
-        # 图片编码器不要求偶数，奇数尺寸是合法的（这一点和视频工具不同）
+        # 图片编码器不要求偶数，奇数尺寸是合法的
         return True, value, ""
 
     def _warn_input(self, err: str):
