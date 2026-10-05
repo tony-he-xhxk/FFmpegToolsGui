@@ -204,13 +204,13 @@ class FFmpegImageResizeGUI:
         btn_frame = ttk.Frame(self.window)
         btn_frame.grid(row=4, column=0, columnspan=4, pady=(8, 4), padx=10)
 
-        self.btn_resize = ttk.Button(btn_frame, text="📐 开始调整", command=self._start_resize)
+        self.btn_resize = ttk.Button(btn_frame, text="开始调整", command=self._start_resize)
         self.btn_resize.pack(side="left", padx=5)
 
-        self.btn_stop = ttk.Button(btn_frame, text="⏹ 停止", command=self._stop_process, state="disabled")
+        self.btn_stop = ttk.Button(btn_frame, text="停止", command=self._stop_process, state="disabled")
         self.btn_stop.pack(side="left", padx=5)
 
-        self.btn_clear = ttk.Button(btn_frame, text="🗑 清空终端", command=self._clear_terminal)
+        self.btn_clear = ttk.Button(btn_frame, text="清空终端", command=self._clear_terminal)
         self.btn_clear.pack(side="left", padx=5)
 
         # ----- Row 5 / 6: 终端输出 -----
@@ -255,10 +255,10 @@ class FFmpegImageResizeGUI:
         if path:
             self.ffmpeg_path = path
             self.ffmpeg_var.set(path)
-            self._append_terminal(f"[{self._ts()}] ✅ 自动检测到 FFmpeg：{path}")
+            self._append_terminal(f"[{self._ts()}] [OK] 自动检测到 FFmpeg：{path}")
         else:
             self.ffmpeg_var.set("（未找到，请手动选择）")
-            self._append_terminal(f"[{self._ts()}] ❌ 未在系统 PATH 中找到 FFmpeg")
+            self._append_terminal(f"[{self._ts()}] [ERR] 未在系统 PATH 中找到 FFmpeg")
             answer = messagebox.askyesno(
                 "未找到 FFmpeg",
                 "未能自动检测到 ffmpeg。\n\n是否现在手动选择 ffmpeg.exe 所在位置？"
@@ -279,7 +279,7 @@ class FFmpegImageResizeGUI:
             return
         self.ffmpeg_path = path
         self.ffmpeg_var.set(path)
-        self._append_terminal(f"[{self._ts()}] 📁 手动指定 FFmpeg：{path}")
+        self._append_terminal(f"[{self._ts()}] [FILE] 手动指定 FFmpeg：{path}")
 
     # ── 文件选择 ───────────────────────────
 
@@ -313,7 +313,9 @@ class FFmpegImageResizeGUI:
             f'"{self.input_file}"'
         )
         try:
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=15)
+            # 统一按 UTF-8 解码子进程输出：Windows 默认按 GBK 解，遇到非 GBK 字节会抛异常
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True,
+                                    encoding='utf-8', errors='replace', timeout=15)
             if result.returncode != 0:
                 raise RuntimeError(result.stderr.strip())
             data = json.loads(result.stdout)
@@ -323,12 +325,12 @@ class FFmpegImageResizeGUI:
             self.image_width = int(streams[0]["width"])
             self.image_height = int(streams[0]["height"])
             self.resolution_var.set(f"{self.image_width} × {self.image_height}")
-            self._append_terminal(f"[{self._ts()}] 📏 原分辨率：{self.image_width}×{self.image_height}")
+            self._append_terminal(f"[{self._ts()}] [SIZE] 原分辨率：{self.image_width}×{self.image_height}")
         except Exception as e:
             self.image_width = None
             self.image_height = None
             self.resolution_var.set("（获取失败）")
-            self._append_terminal(f"[{self._ts()}] ⚠ 无法获取图片分辨率：{e}")
+            self._append_terminal(f"[{self._ts()}] [WARN] 无法获取图片分辨率：{e}")
 
     # ── 终端操作 ────────────────────────────
 
@@ -366,7 +368,7 @@ class FFmpegImageResizeGUI:
         self.on_complete_cb = on_complete
         self._set_buttons_state(True)
 
-        self._append_terminal(f"[{self._ts()}] ▶ {cmd_str}")
+        self._append_terminal(f"[{self._ts()}] [RUN] {cmd_str}")
         self._append_terminal("─" * 60)
 
         self.process = subprocess.Popen(
@@ -400,9 +402,9 @@ class FFmpegImageResizeGUI:
                     self._append_terminal("─" * 60)
                     rc = self.returncode if self.returncode is not None else -1
                     if rc == 0:
-                        self._append_terminal(f"[{self._ts()}] ✅ 命令执行成功（返回码 0）\n")
+                        self._append_terminal(f"[{self._ts()}] [OK] 命令执行成功（返回码 0）\n")
                     else:
-                        self._append_terminal(f"[{self._ts()}] ❌ 命令异常退出（返回码 {rc}）\n")
+                        self._append_terminal(f"[{self._ts()}] [ERR] 命令异常退出（返回码 {rc}）\n")
                     self.is_running = False
                     self.process = None
                     self._set_buttons_state(False)
@@ -420,7 +422,7 @@ class FFmpegImageResizeGUI:
         """终止正在运行的子进程。"""
         if self.process and self.process.poll() is None:
             self.process.terminate()
-            self._append_terminal(f"[{self._ts()}] ⏹ 用户手动停止")
+            self._append_terminal(f"[{self._ts()}] [STOP] 用户手动停止")
 
     # ── 前置校验 ──────────────────────────
 
@@ -508,22 +510,22 @@ class FFmpegImageResizeGUI:
         cmd = ' '.join(parts)
 
         if mode == "custom":
-            self._append_terminal(f"[{self._ts()}] 📐 目标尺寸：{est[0]} × {est[1]}（自定义）")
+            self._append_terminal(f"[{self._ts()}] [SIZE] 目标尺寸：{est[0]} × {est[1]}（自定义）")
         else:
-            self._append_terminal(f"[{self._ts()}] 📐 目标尺寸：{est[0]} × {est[1]}（按原比例自动计算）")
+            self._append_terminal(f"[{self._ts()}] [SIZE] 目标尺寸：{est[0]} × {est[1]}（按原比例自动计算）")
         if quality_flags:
             self._append_terminal(
-                f"[{self._ts()}] ℹ 有损格式，自动追加高质量编码参数：{' '.join(quality_flags)}")
+                f"[{self._ts()}] [INFO] 有损格式，自动追加高质量编码参数：{' '.join(quality_flags)}")
 
-        self._append_terminal(f"[{self._ts()}] 📐 开始调整分辨率 → {os.path.basename(output_path)}")
+        self._append_terminal(f"[{self._ts()}] [SIZE] 开始调整分辨率 → {os.path.basename(output_path)}")
         self._run_command(cmd, on_complete=lambda rc: self._on_resize_done(rc, output_path))
 
     def _on_resize_done(self, returncode: int, output_path: str):
         if returncode == 0:
-            self._append_terminal(f"[{self._ts()}] 🎉 调整完成！输出：{output_path}")
+            self._append_terminal(f"[{self._ts()}] [DONE] 调整完成！输出：{output_path}")
             messagebox.showinfo("调整完成", f"已保存到：\n{output_path}")
         else:
-            self._append_terminal(f"[{self._ts()}] ❌ 调整失败（返回码 {returncode}），请查看上方终端输出排查")
+            self._append_terminal(f"[{self._ts()}] [ERR] 调整失败（返回码 {returncode}），请查看上方终端输出排查")
             messagebox.showerror("调整失败", f"ffmpeg 返回错误码 {returncode}，请检查终端输出中的报错信息。")
 
     # ── 窗口关闭 ───────────────────────────

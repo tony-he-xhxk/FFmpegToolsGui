@@ -1,4 +1,4 @@
-# 🎬 FFmpegToolsGui（FFmpeg 视频工具箱）
+# FFmpegToolsGui（FFmpeg 视频工具箱）
 
 > 一套基于 Python + Tkinter 的本地视频 / 图片处理桌面工具集，封装 FFmpeg 四类常用操作，附带统一启动器。
 
@@ -9,7 +9,7 @@
 
 ---
 
-## 📦 项目文件
+## 项目文件
 
 ```
 FFmpegToolsGui/
@@ -17,7 +17,7 @@ FFmpegToolsGui/
 ├── ffmpeg_resize_gui.py       # 工具②：分辨率调整（缩放 / 改变宽高）
 ├── ffmpeg_clip_gui.py         # 工具③：时间裁剪（截取视频片段）
 ├── ffmpeg_image_resize_gui.py # 工具④：图片分辨率调整（调宽 / 调高 / 自定义）
-├── ffmpeg_launcher.bat        # 🚀 统一启动器（双击运行，交互菜单）
+├── ffmpeg_launcher.bat        # 统一启动器（双击运行，交互菜单）
 ```
 
 | 工具  | 脚本                     | 功能            | 输出命名                    |
@@ -29,21 +29,21 @@ FFmpegToolsGui/
 
 ---
 
-## 🖥️ Windows 兼容性
+## Windows 兼容性
 
 | 项目 | 兼容性 |
 |------|--------|
-| 操作系统 | ✅ Windows 10 / 11 全面支持 |
-| Python | ✅ Python 3.10+（**须从 [python.org](https://www.python.org/) 下载完整安装版**，含 tkinter） |
-| FFmpeg | ✅ 支持 PATH 自动检测 + 手动选择 `ffmpeg.exe` 两种模式 |
-| 文件路径 | ✅ 支持含空格 / 中文的路径（各脚本均用 `os.path` + 双引号包裹） |
-| 编码 | ✅ `.bat` 以 GBK 编码保存，中文菜单在 `cmd.exe` 正常显示 |
+| 操作系统 | [OK] Windows 10 / 11 全面支持 |
+| Python | [OK] Python 3.10+（**须从 [python.org](https://www.python.org/) 下载完整安装版**，含 tkinter） |
+| FFmpeg | [OK] 支持 PATH 自动检测 + 手动选择 `ffmpeg.exe` 两种模式 |
+| 文件路径 | [OK] 支持含空格 / 中文的路径（各脚本均用 `os.path` + 双引号包裹） |
+| 编码 | [OK] `.bat` 以 GBK 编码保存，中文菜单在 `cmd.exe` 正常显示 |
 
-> ⚠️ **已知限制**：通过 Chocolatey / Scoop 等包管理器安装的 Python **可能不包含 tkinter**，会导致 GUI 无法启动。请确保 `python -c "import tkinter"` 无报错。
+> [注意] **已知限制**：通过 Chocolatey / Scoop 等包管理器安装的 Python **可能不包含 tkinter**，会导致 GUI 无法启动。请确保 `python -c "import tkinter"` 无报错。
 
 ---
 
-## 🔧 预装依赖
+## 预装依赖
 
 ### 必需（所有工具）
 
@@ -76,7 +76,7 @@ python -c "import tkinter; from PIL import Image; print('OK')"
 
 ---
 
-## 🚀 使用方法
+## 使用方法
 
 ### 方式一：统一启动器（推荐 — 双击即可）
 
@@ -125,7 +125,7 @@ python ffmpeg_image_resize_gui.py
 
 ---
 
-## 🎨 界面预览
+## 界面预览
 
 四个工具共享统一的界面风格：
 
@@ -136,7 +136,7 @@ python ffmpeg_image_resize_gui.py
 
 ---
 
-## ⚙️ 技术栈
+## 技术栈
 
 | 组件 | 用途 |
 |------|------|
@@ -148,7 +148,7 @@ python ffmpeg_image_resize_gui.py
 
 ---
 
-## 🔧 常见问题
+## 常见问题
 
 <details>
 <summary><b>Q: 启动提示 "未找到支持 tkinter 的 Python"？</b></summary>
@@ -188,6 +188,6 @@ python ffmpeg_image_resize_gui.py
 
 ---
 
-## 📝 License
+## License
 
 MIT License —— 可自由使用、修改和分发。
