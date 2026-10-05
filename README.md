@@ -50,6 +50,7 @@ FFmpegToolsGui/
 | 依赖 | 安装方式 | 说明 |
 |------|----------|------|
 | **FFmpeg** | [下载地址](https://ffmpeg.org/download.html) 或 `winget install ffmpeg` | 请将 `bin` 目录加入系统 PATH，或启动后手动选择 `ffmpeg.exe` |
+| **customtkinter** | `pip install customtkinter` | 界面库（深色圆角风格）；同时解决 Windows 高 DPI 下"打开文件对话框后窗口突然变小"的问题 |
 
 ### 按需（仅特定工具）
 
