@@ -1,6 +1,6 @@
 # FFmpegToolsGui（FFmpeg 视频工具箱）
 
-> 一套基于 Python + Tkinter 的本地视频 / 图片处理桌面工具集，封装 FFmpeg 四类常用操作，附带统一启动器。
+> 一套基于 Python + CustomTkinter 的本地视频 / 图片处理桌面工具集，封装 FFmpeg 四类常用操作，附带统一启动器。
 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)](https://www.python.org/)
 [![FFmpeg](https://img.shields.io/badge/FFmpeg-required-green?logo=ffmpeg)](https://ffmpeg.org/)
@@ -34,12 +34,13 @@ FFmpegToolsGui/
 | 项目 | 兼容性 |
 |------|--------|
 | 操作系统 | [OK] Windows 10 / 11 全面支持 |
-| Python | [OK] Python 3.10+（**须从 [python.org](https://www.python.org/) 下载完整安装版**，含 tkinter） |
+| Python | [OK] Python 3.10+（**须从 [python.org](https://www.python.org/) 下载完整安装版**，含 tkinter —— CustomTkinter 基于它） |
+| CustomTkinter | [OK] 界面库，见下方「预装依赖」；`pip install customtkinter` |
 | FFmpeg | [OK] 支持 PATH 自动检测 + 手动选择 `ffmpeg.exe` 两种模式 |
 | 文件路径 | [OK] 支持含空格 / 中文的路径（各脚本均用 `os.path` + 双引号包裹） |
 | 编码 | [OK] `.bat` 以 GBK 编码保存，中文菜单在 `cmd.exe` 正常显示 |
 
-> [注意] **已知限制**：通过 Chocolatey / Scoop 等包管理器安装的 Python **可能不包含 tkinter**，会导致 GUI 无法启动。请确保 `python -c "import tkinter"` 无报错。
+> [注意] **已知限制**：通过 Chocolatey / Scoop 等包管理器安装的 Python **可能不包含 tkinter**（CustomTkinter 依赖它），会导致界面无法启动。请确保 `python -c "import tkinter, customtkinter"` 无报错。
 
 ---
 
@@ -57,22 +58,25 @@ FFmpegToolsGui/
 | 工具 | 额外依赖 | 安装命令 |
 |------|----------|----------|
 | ① 视频画面裁剪 | **Pillow** | `pip install Pillow` |
-| ② 分辨率调整 | *无（纯标准库）* | — |
-| ③ 时间裁剪 | *无（纯标准库）* | — |
-| ④ 图片分辨率调整 | *无（纯标准库）* | — |
+| ② 分辨率调整 | *无* | — |
+| ③ 时间裁剪 | *无* | — |
+| ④ 图片分辨率调整 | *无* | — |
 
 ### 一键安装
 
 ```powershell
-# 1. 安装 Pillow（仅裁剪工具需要）
+# 1. 安装界面库 CustomTkinter（所有工具都需要）
+pip install customtkinter
+
+# 2. 安装 Pillow（仅视频画面裁剪工具需要：预览首帧）
 pip install Pillow
 
-# 2. 安装 FFmpeg（Windows 包管理器方式）
+# 3. 安装 FFmpeg（Windows 包管理器方式）
 winget install "FFmpeg (Essentials Build)"
 
-# 3. 验证
+# 4. 验证：Python 依赖 + FFmpeg
+python -c "import tkinter, customtkinter; from PIL import Image; print('依赖 OK')"
 ffmpeg -version
-python -c "import tkinter; from PIL import Image; print('OK')"
 ```
 
 ---
@@ -142,7 +146,7 @@ python ffmpeg_image_resize_gui.py
 | 组件 | 用途 |
 |------|------|
 | Python 3.10+ | 运行环境和 GUI 构建 |
-| tkinter / ttk | 图形界面控件 |
+| CustomTkinter（基于 tkinter） | 图形界面控件（深色圆角风格，内置高 DPI 适配） |
 | Pillow (PIL) | 裁剪预览：视频首帧加载 → Canvas 渲染 |
 | FFmpeg / FFprobe | 视频解码/编码/信息获取 |
 | subprocess + threading + queue | 异步进程管理 + 实时终端输出 |
@@ -152,15 +156,15 @@ python ffmpeg_image_resize_gui.py
 ## 常见问题
 
 <details>
-<summary><b>Q: 启动提示 "未找到支持 tkinter 的 Python"？</b></summary>
+<summary><b>Q: 启动提示找不到 Python，或 `import customtkinter` 报错？</b></summary>
 <br>
-说明你的 Python 缺少 tkinter 模块。请从 <a href="https://www.python.org/">python.org</a> 重新下载完整安装版（不是嵌入式包或包管理器版本）。
+两种原因：① Python 缺少 tkinter（CustomTkinter 基于它）——请从 <a href="https://www.python.org/">python.org</a> 重新下载完整安装版（不是嵌入式包或包管理器版本）；② 没装界面库——运行 <code>pip install customtkinter</code>。
 </details>
 
 <details>
 <summary><b>Q: 裁剪工具提示 "Pillow is required"？</b></summary>
 <br>
-运行 <code>pip install Pillow</code> 安装即可。另两个工具不需要 Pillow。
+运行 <code>pip install Pillow</code> 安装即可。其余工具不需要 Pillow。
 </details>
 
 <details>
