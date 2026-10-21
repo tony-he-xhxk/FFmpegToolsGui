@@ -191,6 +191,11 @@ python ffmpeg_image_resize_gui.py
 在输入文件的**同一目录下**，文件名自动追加后缀（如 <code>_cropped.mp4</code>、<code>_trimmed.mp4</code>、<code>_resized_1920x1080.png</code>），已存在则自动加序号避免覆盖。
 </details>
 
+<details>
+<summary><b>Q: 我想修复视频手动定位出现音画不同步的问题，这个工具可以做吗？</b></summary>
+<br>
+可以尝试。若想单纯修复手动定位后音画不同步的问题，选择 [3] 时间裁剪工具，在开始时间框内输入0，结尾时间框留空，点击开始裁剪，工具会默认加上+faststart参数，尝试仅修复该问题，而不影响原视频时长与分辨率。
+</details>
 ---
 
 ## License
